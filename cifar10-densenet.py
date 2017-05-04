@@ -48,7 +48,7 @@ class Model(ModelDesc):
                 c = BatchNorm('bn1', l)
                 c = tf.nn.relu(c)
                 c = conv('conv1', c, self.growthRate, 1)
-                l = tf.concat(3, [c, l])
+                l = tf.concat([c, l], 3)
             return l
 
         def add_transition(name, l):
@@ -91,7 +91,7 @@ class Model(ModelDesc):
         
         prob = tf.nn.softmax(logits, name='output')
 
-        cost = tf.nn.sparse_softmax_cross_entropy_with_logits(logits, label)
+        cost = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=label, logits=logits)
         cost = tf.reduce_mean(cost, name='cross_entropy_loss')
 
         wrong = prediction_incorrect(logits, label)
@@ -99,7 +99,7 @@ class Model(ModelDesc):
         add_moving_summary(tf.reduce_mean(wrong, name='train_error'))
 
         # weight decay on all W
-        wd_cost = tf.mul(1e-4, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
+        wd_cost = tf.multiply(1e-4, regularize_cost('.*/W', tf.nn.l2_loss), name='wd_cost')
         add_moving_summary(cost, wd_cost)
 
         add_param_summary([('.*/W', ['histogram'])])   # monitor W
@@ -142,7 +142,7 @@ def get_config():
 
     get_global_step_var()
     lr = tf.Variable(0.1, trainable=False, name='learning_rate')
-    tf.scalar_summary('learning_rate', lr)
+    tf.summary.scalar('learning_rate', lr)
 
     return TrainConfig(
         dataset=dataset_train,
